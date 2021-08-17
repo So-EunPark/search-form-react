@@ -21,7 +21,7 @@ export default class TabView extends View{
 	}
 
 	bindEvents() {
-		delegate(this.element, "click", "li", event =>{
+		delegate(this.element, "click", "li", event => {
 			this.handleClick(event)
 		})
 	}
