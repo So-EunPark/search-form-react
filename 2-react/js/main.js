@@ -15,27 +15,39 @@ class App extends React.Component {
 
 		//setState라는 메소드를 호출해야 컴포넌트는 상태변화를 알 수 있다.
 		//스스로 다시 그려야 하는지 여부도 알 수 있다.
-		this.setState({
-			searchKeyword : event.target.value,
-		})
+
+		const searchKeyword = event.target.value;
+		this.setState({searchKeyword})
 	}
 	
+	handleSubmit(event) {
+		event.preventDefault();
+		console.log('handleSubmit', this.state.searchKeyword);
+
+	}
+
 	render() {
+		let resetButton = null;
+
+		if(this.state.searchKeyword.length > 0) {
+			resetButton = <button type="reset" className="btn-reset"></button>;
+		}
+
 		return (
 			<>
 				<header>
-					<h2 class="container">검색</h2>
+					<h2 className="container">검색</h2>
 				</header>
-				<div class="container">
-					<form id="search-form-view">
+				<div className="container">
+					<form onSubmit={event => this.handleSubmit(event)}>
 						<input 
 							type="text" 
 							placeholder="검색어를 입력하세요" 
-							autofocus 
+							autoFocus 
 							value = {this.state.searchKeyword}
-							onChange = {event => this.handleChangeInput(event)}
+							onChange = {(event) => this.handleChangeInput(event)}
 						/>
-						<button type="reset" class="btn-reset"></button>
+						{resetButton}
 					</form>
 				</div>
 			</>
