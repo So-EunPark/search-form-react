@@ -1,37 +1,123 @@
+import store from "./js/Store.js";
+
+const TabType = {
+  KEYWORD: "KEYWORD",
+  HISTORY: "HISTORY",
+};
+const TabLabel = {
+  [TabType.KEYWORD]: "추천 검색어",
+  [TabType.HISTORY]: "최근 검색어",
+};
+
 class App extends React.Component {
 	constructor(props) {
 		super(props);
 		
 		this.state = {
 			searchKeyword: "",
+			searchResult: [],
+			submitted: false,
+			selectedTab: TabType.KEYWORD,
 		}
 	}
 
 	//컴포넌트를 수정하기 위해선 이렇게 직접적으로 처리하지 말고 
 	//setState라는 명령어로 하자.
 	handleChangeInput(event) {
-		// this.state.searchKeyword = event.target.value;
-		// this.forceUpdate(); //강제로 업데이트한다
-
-		//setState라는 메소드를 호출해야 컴포넌트는 상태변화를 알 수 있다.
-		//스스로 다시 그려야 하는지 여부도 알 수 있다.
-
 		const searchKeyword = event.target.value;
-		this.setState({searchKeyword})
+
+		if (searchKeyword.length <= 0) {
+			return this.handleReset();
+		}
+		this.setState({searchKeyword});
 	}
 	
+	//input submit 처리
 	handleSubmit(event) {
 		event.preventDefault();
 		console.log('handleSubmit', this.state.searchKeyword);
+		
+		if(this.state.searchKeyword.length > 0) {
+			this.search(this.state.searchKeyword);
+		}
+	}
 
+	search(searchKeyword) {
+		const searchResult = store.search(searchKeyword);
+		this.setState({
+			searchResult,
+			submitted:true,
+		});
+	}
+
+	//reset 처리
+	handleReset() {
+		this.setState(() => {
+			return { 
+				searchKeyword:"",
+				submitted:false,
+			};
+		}, () => {
+			console.log('handleReset', this.state.searchKeyword);
+		})
 	}
 
 	render() {
-		let resetButton = null;
+		const searchForm = (
+			<form 
+				onSubmit={event => this.handleSubmit(event)}
+				onReset = {()=>{this.handleReset()}}>
+				<input 
+					type="text" 
+					placeholder="검색어를 입력하세요" 
+					autoFocus 
+					value = {this.state.searchKeyword}
+					onChange = {(event) => this.handleChangeInput(event)}
+				/>
+				{this.state.searchKeyword.length > 0 && (
+							<button type="reset" className="btn-reset"></button>
+						)}
+			</form>
+		);
 
-		if(this.state.searchKeyword.length > 0) {
-			resetButton = <button type="reset" className="btn-reset"></button>;
-		}
+		const searchResult = (
+			this.state.searchResult.length > 0 ? (
+				<ul className="result">
+					{this.state.searchResult.map( (item) => {
+						return (
+							<li key={item.id}>
+								<img src={item.imageUrl} alt={item.name} />
+								<p>{item.name}</p>
+							</li>
+						);
+					})}
+				</ul>
+			) : (
+				<div className="empty-box">검색 결과가 없습니다.</div>
+			)
+		);
+
+		const tabs = (
+			<>
+				<ul className="tabs">
+					{Object.values(TabType).map((tabType) => (
+						<li
+							className={this.state.selectedTab === tabType ? "active" : ""}
+							key={tabType}
+							onClick={() => {
+								this.setState({
+									selectedTab: tabType,
+								});
+							}}
+						>
+							{TabLabel[tabType]}
+						</li>
+					))}
+				</ul>
+				{this.state.selectedTab === TabType.KEYWORD && <>Todo: 추천검색어</>}
+				{this.state.selectedTab === TabType.HISTORY && <>Todo: 최근검색어</>}
+			</>
+    );
 
 		return (
 			<>
@@ -39,16 +125,10 @@ class App extends React.Component {
 					<h2 className="container">검색</h2>
 				</header>
 				<div className="container">
-					<form onSubmit={event => this.handleSubmit(event)}>
-						<input 
-							type="text" 
-							placeholder="검색어를 입력하세요" 
-							autoFocus 
-							value = {this.state.searchKeyword}
-							onChange = {(event) => this.handleChangeInput(event)}
-						/>
-						{resetButton}
-					</form>
+					{searchForm}
+					<div className="content">
+						{this.state.submitted ? searchResult : tabs}
+					</div>
 				</div>
 			</>
 		);
